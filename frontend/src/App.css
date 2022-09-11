@@ -7,7 +7,9 @@ black: #282828
 light-black : #3c3836
 text-color : #fbf1c7
 orange : #d65d0e
+darkOrange : #b5510e
 red : #cc241d
+darkRed :#b31f19
 green : #98971a
 yellow : #d79921
 blue : #458588 
@@ -20,7 +22,9 @@ blue : #458588
   --textColor: #fbf1c7;
   --darkTextColor: #ebdbb2;
   --orangeColor: #d65d0e;
+  --darkOrangeColor: #b5510e;
   --redColor: #cc241d;
+  --darkRedColor: #b31f19;
   --greenColor: #98971a;
   --yellowColor: #d79921;
   --blueColor: #458588;
