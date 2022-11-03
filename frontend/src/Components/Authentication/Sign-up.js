@@ -8,6 +8,7 @@ import {
   InputGroup,
   InputRightElement,
   Button,
+  useToast,
 } from "@chakra-ui/react";
 import {
   CloseIcon,
@@ -15,7 +16,8 @@ import {
   ViewIcon,
   ViewOffIcon,
 } from "@chakra-ui/icons";
-
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 const SignUp = () => {
   const [name, setName] = useState();
   const [email, setEmail] = useState();
@@ -23,8 +25,10 @@ const SignUp = () => {
   const [password, setPassword] = useState();
   const [confirmPassword, setConfirmPassword] = useState();
   const [picture, setPicture] = useState(null);
-
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
   const ref = useRef();
+  const navigate = useNavigate();
 
   const clearInput = () => {
     ref.current.value = "";
@@ -33,10 +37,106 @@ const SignUp = () => {
   const handleClick = () => setShowPassword(!showPassword);
 
   const postDetails = (picture) => {
-    setPicture(picture);
+    setLoading(true);
+    if (picture === undefined) {
+      toast({
+        title: "Select an image",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      return;
+    }
+    if (picture.type === "image/jpeg" || picture.type === "image/png") {
+      const data = new FormData();
+      data.append("file", picture);
+      data.append("upload_preset", "chat-demo");
+      data.append("cloud_name", "rahulsharma33");
+      fetch("https://api.cloudinary.com/v1_1/rahulsharma33/image/upload", {
+        method: "post",
+        body: data,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log(data);
+          setPicture(data.url.toString());
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.log(err);
+          setLoading(false);
+        });
+    } else {
+      toast({
+        title: "Select an image",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setLoading(false);
+      return;
+    }
   };
 
-  const handleSignUpSubmit = () => { };
+  const handleSignUpSubmit = async () => {
+    setLoading(true);
+    if (!name || !email || !password || !confirmPassword) {
+      toast({
+        title: "Fill all the required fields",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setLoading(true);
+      return;
+    }
+    if (password != confirmPassword) {
+      toast({
+        title: "Password & confirm password don't watch",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setLoading(false);
+      return;
+    }
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+      const { data } = await axios.post(
+        "/api/user",
+        { name, email, password, picture },
+        config
+      );
+      toast({
+        title: "Registration successful",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      navigate("/chats");
+      setLoading(false);
+    } catch (error) {
+      toast({
+        title: "Error occured",
+        description: error.response.data.message,
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setLoading(false);
+    }
+  };
   return (
     <>
       <VStack spacing="15px">
@@ -150,6 +250,7 @@ const SignUp = () => {
           mt="15px"
           _hover={{ background: "var(--darkOrangeColor)" }}
           onClick={handleSignUpSubmit}
+          isLoading={loading}
         >
           SIGN-UP
         </Button>

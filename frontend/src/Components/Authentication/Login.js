@@ -2,20 +2,74 @@ import React, { useState } from "react";
 import {
   Box,
   Button,
-  Stack,
   FormControl,
   FormLabel,
   Input,
   InputGroup,
   InputRightElement,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 const Login = () => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
   const [showPassword, setShowPassword] = useState(false);
-  const handleLoginSubmit = () => { };
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const Toast = useToast();
+  const handleLoginSubmit = async () => {
+    setLoading(true);
+    if (!email || !password) {
+      Toast({
+        title: "Email/password field cannot be empty",
+        status: "warning",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setLoading(false);
+      return;
+    }
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+      const { data } = await axios.post(
+        "/api/user/login",
+        { email, password },
+        config
+      );
+      Toast({
+        title: "Login successful",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setLoading(false);
+      navigate("/chats");
+    } catch (error) {
+      console.log(error);
+      Toast({
+        title: "Error occured",
+        description: error.response.data.message,
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setLoading(false);
+    }
+  };
+
   const handleShowPassword = () => {
     setShowPassword(!showPassword);
   };
@@ -25,7 +79,9 @@ const Login = () => {
         <FormControl isRequired>
           <FormLabel>Email</FormLabel>
           <Input
-            placeholder="Enter your email id"
+            type="email"
+            value={email}
+            placeholder="Eg - xyz@gmail.com"
             onChange={(e) => setEmail(e.target.value)}
             _focus={{
               boxShadow: "inherit",
@@ -38,8 +94,9 @@ const Login = () => {
           <FormLabel>Password</FormLabel>
           <InputGroup>
             <Input
+              value={password}
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
+              placeholder="Enter a strong password"
               _placeholder={{ color: "var(--textColor)" }}
               onChange={(e) => setPassword(e.target.value)}
               _focus={{
@@ -68,11 +125,19 @@ const Login = () => {
           color="var(--darkTextColor)"
           _hover={{ background: "var(--darkOrangeColor)" }}
           onClick={handleLoginSubmit}
+          isLoading={loading}
         >
-          LOGIN
+          LOGINN
         </Button>
         <Box display="flex" flexDirection="row-reverse" width="100%">
-          <Button variant="link" color="var(--darkTextColor)" align>
+          <Button
+            variant="link"
+            color="var(--darkTextColor)"
+            onClick={() => {
+              setEmail("guest@gmail.com");
+              setPassword("123456");
+            }}
+          >
             GUEST USER
           </Button>
         </Box>
